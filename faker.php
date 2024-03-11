@@ -7,13 +7,11 @@
 // when installed via composer
 require_once 'vendor/autoload.php';
 
-
 // Connect to the database
 $user = 'root';
 $password = '';
 $dbname = 'moocDB';
 $driver = 'mysql';//Change this to your database driver if you use sqlite or postgresql
-
 
 try {
    $conn = new PDO($driver.':host=localhost;dbname='.$dbname, $user, $password);
@@ -21,11 +19,61 @@ try {
    die("Connection failed: " . $e->getMessage());
 }
 
+$faker = Faker\Factory::create();
+
+// COURS TABLE
+for ($i = 0; $i < 10; $i++) {
+   $intitule = $faker->text(128);
+   $description = $faker->realText();
+   $preRequis = $faker->realText(); //is preRequis supposed to be a text?
+
+   //70% chance of generating both dates
+    if ($faker->boolean(70)) {
+         $dateDebut = $faker->date();
+         $dateFin = $faker->dateTimeBetween($dateDebut . "+10 days", $dateDebut . '+1 year')->format('Y-m-d'); //dateFin is between dateDebut and 1 year after
+    }
+
+    //20% chance of $cout being 0 <-> 20% chance of the class being free
+    if ($faker->boolean(20)) {
+         $cout = 0;
+    } else {
+         $cout = $faker->numberBetween(1, 200);
+    }
+
+   $stmt = $conn->prepare("INSERT INTO Cours (intitule, description, preRequis, dateDebut, dateFin, cout) VALUES (:intitule, :description, :preRequis, :dateDebut, :dateFin, :cout)");
+   $stmt->bindParam(':intitule', $intitule, PDO::PARAM_STR);
+   $stmt->bindParam(':description', $description, PDO::PARAM_STR);
+   $stmt->bindParam(':preRequis', $preRequis, PDO::PARAM_STR);
+   $stmt->bindParam(':dateDebut', $dateDebut, PDO::PARAM_STR);
+   $stmt->bindParam(':dateFin', $dateFin, PDO::PARAM_STR);
+   $stmt->bindParam(':cout', $cout, PDO::PARAM_INT);
+   $stmt->execute();
+}
+
+// Generate and insert the fake data for the EXAMEN table
+for ($i = 0; $i < 10; $i++) {
+    $idExamen = $i;  //idExamen auto increments starting from 0
+    $titreExamen = $faker->text(128);
+    $contenuExamen = $faker->realText();
+    $scoreMin = $faker->numberBetween(40, 100);
+
+//IL MANQUE LA FOREIGN KEY PARTIE_numPartie
+
+    $stmt = $conn->prepare("INSERT INTO Examen (titreExamen, contenuExamen, scoreMin) VALUES (:titreExamen, :contenuExamen, :scoreMin)");
+    $stmt->bindParam(':titreExamen', $titreExamen, PDO::PARAM_STR);
+    $stmt->bindParam(':contenuExamen', $contenuExamen, PDO::PARAM_STR);
+    $stmt->bindParam(':scoreMin', $scoreMin, PDO::PARAM_INT);
+    $stmt->execute();
+}
+echo "EXAMEN inserted successfully"."\n";
+
+
+
+
 
 
 
 // Generate and insert the fake data for the USERS table
-$faker = Faker\Factory::create();
 for ($i = 0; $i < 5; $i++) {
    $user_email = $faker->email();
    $stmt = $conn->prepare("INSERT INTO USERS (email) VALUES (:email)");
