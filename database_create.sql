@@ -1,16 +1,16 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2024-03-11 16:55:29.135
+-- Last modification date: 2024-03-11 17:49:13.137
 
 -- tables
 -- Table: Cours
 CREATE TABLE Cours (
-    numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
+    numCours integer AUTO_INCREMENT NOT NULL COMMENT 'le numero identifiant de chaque cours',
     intitule varchar(128)  NOT NULL COMMENT 'le titre du cours',
     description text  NOT NULL COMMENT 'texte qui decrit le cours',
     preRequis text  NOT NULL COMMENT 'Texte qui precise les pre-requis du cours',
     dateDebut date  NULL,
     dateFin date  NULL,
-    cout integer  NOT NULL COMMENT 'prix du cours, ne doit pas etre inferieur a 0',
+    cout integer  NOT NULL COMMENT 'prix du cours, ne doit pas être inferieur a 0',
     CONSTRAINT Cours_pk PRIMARY KEY (numCours)
 ) COMMENT 'Les cours de la plateforme MOOC';
 
@@ -19,8 +19,9 @@ CREATE TABLE Examen (
     idExamen integer  NOT NULL COMMENT 'numero identifiant de l''''examen',
     titreExamen varchar(128)  NOT NULL COMMENT 'titre de l''''examen',
     contenuExamen Text  NOT NULL COMMENT 'le texte qui represente le contenu de l''''examen',
-    scoreMin integer  NOT NULL COMMENT 'score minimal pour reussir l''''exxamen. Doit etre compris entre 40 et 100',
+    scoreMin integer  NOT NULL COMMENT 'score minimal pour reussir l''''exxamen. Doit être compris entre 40 et 100',
     Partie_numPartie integer  NOT NULL,
+    Cours_numCours int  NOT NULL,
     CONSTRAINT Examen_pk PRIMARY KEY (idExamen)
 ) COMMENT 'Les examens portent sur des parties de cours.';
 
@@ -41,7 +42,7 @@ CREATE TABLE Partie (
     Contenu Text  NOT NULL COMMENT 'contenu de la partie du cours',
     numChapitre integer  NOT NULL COMMENT 'numero de chapitre auquel la partie appartient',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    CONSTRAINT Partie_pk PRIMARY KEY (numPartie)
+    CONSTRAINT Partie_pk PRIMARY KEY (numPartie,Cours_numCours)
 ) COMMENT 'Les parties qui composent chaque cours. ';
 
 -- Table: Progression
@@ -49,6 +50,7 @@ CREATE TABLE Progression (
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Partie_numPartie integer  NOT NULL COMMENT 'identifiant de la partie',
     fini boolean  NOT NULL,
+    Cours_numCours int  NOT NULL,
     CONSTRAINT Progression_pk PRIMARY KEY (Utilisateur_idUtilisateur,Partie_numPartie)
 ) COMMENT 'Mesure la progression de chaque etudiant sur chaque partie de cours';
 
@@ -73,7 +75,7 @@ CREATE TABLE Session (
     numSession integer  NOT NULL COMMENT 'numero identifiant de la session',
     dateHeureDebut datetime  NOT NULL COMMENT 'date et heure de debut de session',
     dateHeureFin datetime  NOT NULL COMMENT 'date et heure de fin de session',
-    capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas etre inferieur a 0. optionnel.',
+    capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas être inferieur a 0. optionnel.',
     modalite varchar(128)  NOT NULL COMMENT 'modalite de l''''enseignement : soit en distanciel, soit en presentiel',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
     CONSTRAINT Session_pk PRIMARY KEY (numSession)
@@ -126,16 +128,16 @@ ALTER TABLE InscriptionCours ADD CONSTRAINT Cours_InscriptionCours FOREIGN KEY C
     REFERENCES Cours (numCours);
 
 -- Reference: Examen_Partie (table: Examen)
-ALTER TABLE Examen ADD CONSTRAINT Examen_Partie FOREIGN KEY Examen_Partie (Partie_numPartie)
-    REFERENCES Partie (numPartie);
+ALTER TABLE Examen ADD CONSTRAINT Examen_Partie FOREIGN KEY Examen_Partie (Partie_numPartie,Cours_numCours)
+    REFERENCES Partie (numPartie,Cours_numCours);
 
 -- Reference: Partie_Cours (table: Partie)
 ALTER TABLE Partie ADD CONSTRAINT Partie_Cours FOREIGN KEY Partie_Cours (Cours_numCours)
     REFERENCES Cours (numCours);
 
 -- Reference: Partie_Progression (table: Progression)
-ALTER TABLE Progression ADD CONSTRAINT Partie_Progression FOREIGN KEY Partie_Progression (Partie_numPartie)
-    REFERENCES Partie (numPartie);
+ALTER TABLE Progression ADD CONSTRAINT Partie_Progression FOREIGN KEY Partie_Progression (Partie_numPartie,Cours_numCours)
+    REFERENCES Partie (numPartie,Cours_numCours);
 
 -- Reference: Reglement_Cours (table: Reglement)
 ALTER TABLE Reglement ADD CONSTRAINT Reglement_Cours FOREIGN KEY Reglement_Cours (Cours_numCours)

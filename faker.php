@@ -51,13 +51,16 @@ for ($i = 0; $i < 10; $i++) {
 }
 
 // Generate and insert the fake data for the EXAMEN table
+
+
 for ($i = 0; $i < 10; $i++) {
     $idExamen = $i;  //idExamen auto increments starting from 0
     $titreExamen = $faker->text(128);
     $contenuExamen = $faker->realText();
     $scoreMin = $faker->numberBetween(40, 100);
 
-//IL MANQUE LA FOREIGN KEY PARTIE_numPartie
+    //A MODIFIER QUAND LA TABLE PARTIE SERA FAITE
+    $numPartie = $faker->unique()->numberBetween(1, 10); //deux examens ne doivent pas avoir le meme numPartie
 
     $stmt = $conn->prepare("INSERT INTO Examen (titreExamen, contenuExamen, scoreMin) VALUES (:titreExamen, :contenuExamen, :scoreMin)");
     $stmt->bindParam(':titreExamen', $titreExamen, PDO::PARAM_STR);
@@ -67,86 +70,64 @@ for ($i = 0; $i < 10; $i++) {
 }
 echo "EXAMEN inserted successfully"."\n";
 
-
-
-
-
-
-
-// Generate and insert the fake data for the USERS table
-for ($i = 0; $i < 5; $i++) {
-   $user_email = $faker->email();
-   $stmt = $conn->prepare("INSERT INTO USERS (email) VALUES (:email)");
-   $stmt->bindParam(":email", $user_email, PDO::PARAM_STR);
-   $stmt->execute();
-}
-echo "USERS inserted successfully"."\n";
-
-
-//Fetch USERS ids
-$result = $conn->query("SELECT id FROM USERS");
-$users_ids = $result->fetchAll(PDO::FETCH_ASSOC);
-
-
-// Generate and insert the fake data for the ARTICLES table
+// Generate and insert the fake data for the InscriptionCours
+    
+//50 subscriptions are generated
 for ($i = 0; $i < 50; $i++) {
-   $title = $faker->text();
-   $content = $faker->realText();
-   $date = $faker->date();
-   $user_id = $users_ids[array_rand($users_ids)]['id']; //pick a random user id
+    //genere une paire user/cours unique
+    do {
+        $Utilisateur_idUtilisateur = $faker->numberBetween(1, 30); //on a genere 30 users
+        $Cours_numCours = $faker->numberBetween(1, 10); //on a genere 10 cours
+        $pair = "$Utilisateur_idUtilisateur-$Cours_numCours";
+    } while (in_array($pair, $usedPairs)); // Check if the pair has been used
+    $usedPairs[] = $pair; // Add the pair to the used pairs array
+    
+    $dateInscription = $faker->date();
 
+    //50% chance of noteAvis being null
+    if ($faker->boolean(50)) {
+        $noteAvis = $faker->numberBetween(0, 5);
+        //if noteAvis is not null, then commentaireAvis has 80% chance of not being null
+        if ($faker->boolean(80)) {
+            $commentaireAvis = $faker->realText();
+        }
+    }
 
-   $stmt = $conn->prepare("INSERT INTO ARTICLES (title, content, date_created, USERS_id) VALUES  (:title, :content, :date_created, :USERS_id)");
-   $stmt->bindParam(':title', $title, PDO::PARAM_STR);
-   $stmt->bindParam(':content', $content, PDO::PARAM_STR);
-   $stmt->bindParam(':date_created', $date, PDO::PARAM_STR);
-   $stmt->bindParam(':USERS_id', $user_id, PDO::PARAM_INT);
-   $stmt->execute();
+    $stmt = $conn->prepare("INSERT INTO InscriptionCours (Utilisateur_idUtilisateur, Cours_numCours, dateInscription, noteAvis, commentaireAvis) VALUES (:Utilisateur_idUtilisateur, :Cours_numCours, :dateInscription, :noteAvis, :commentaireAvis)");
+    $stmt->bindParam(':Utilisateur_idUtilisateur', $Utilisateur_idUtilisateur, PDO::PARAM_INT);
+    $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
+    $stmt->bindParam(':dateInscription', $dateInscription, PDO::PARAM_STR);
+    $stmt->bindParam(':noteAvis', $noteAvis, PDO::PARAM_INT);
+    $stmt->bindParam(':commentaireAvis', $commentaireAvis, PDO::PARAM_STR);
+    $stmt->execute();
 }
-echo "Articles inserted successfully"."\n";
 
 
-//Fetch ARTICLES ids
-$result = $conn->query("SELECT id FROM ARTICLES");
-$articles_ids = $result->fetchAll(PDO::FETCH_ASSOC);
+// Generate and insert the fake data for the Partie table which has this ddl :
+    /* CREATE TABLE Partie (
+    numPartie integer  NOT NULL COMMENT 'identifiant de la partie',
+    titrePartie varchar(128)  NOT NULL COMMENT 'titre de chaque partie',
+    Contenu Text  NOT NULL COMMENT 'contenu de la partie du cours',
+    numChapitre integer  NOT NULL COMMENT 'numero de chapitre auquel la partie appartient',
+    Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
+    CONSTRAINT Partie_pk PRIMARY KEY (numPartie)
+) COMMENT 'Les parties qui composent chaque cours. ';
+*/
+//ESTCE QUE LE NUMCOURS EST CLE PRIMAIRE DE PARTIE? VERTABELO ME LAISSE PAS FAIRE DE numCours SOIT PRIMARY KEY
 
+for ($i = 0; $i < 30; $i++) {
+    $numPartie = $i;  //numPartie auto increments starting from 0
+    $titrePartie = $faker->text(128);
+    $Contenu = $faker->realText();
+    $numChapitre = $faker->numberBetween(1, 10); //deux parties ne doivent pas avoir le meme numChapitre
+    $Cours_numCours = $faker->numberBetween(1, 10); //deux parties ne doivent pas avoir le meme Cours_numCours
 
-// Generate and insert the fake data for the COMMENTS table
-for ($i = 0; $i < 100; $i++) {
-   $article_id = $articles_ids[array_rand($articles_ids)]['id']; //pick a random article id
-   $user_id = $users_ids[array_rand($users_ids)]['id']; //pick a random user id
-   $content = $faker->realText();
-
-
-   $stmt = $conn->prepare("INSERT INTO COMMENTS (ARTICLES_id, USERS_id, content) VALUES  (:ARTICLES_id, :USERS_id, :content)");
-   $stmt->bindParam(':ARTICLES_id', $article_id, PDO::PARAM_INT);
-   $stmt->bindParam(':USERS_id', $user_id, PDO::PARAM_INT);
-   $stmt->bindParam(':content', $content, PDO::PARAM_STR);
-   $stmt->execute();
+    $stmt = $conn->prepare("INSERT INTO Partie (titrePartie, Contenu, numChapitre, Cours_numCours) VALUES (:titrePartie, :Contenu, :numChapitre, :Cours_numCours)");
+    $stmt->bindParam(':titrePartie', $titrePartie, PDO::PARAM_STR);
+    $stmt->bindParam(':Contenu', $Contenu, PDO::PARAM_STR);
+    $stmt->bindParam(':numChapitre', $numChapitre, PDO::PARAM_INT);
+    $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
+    $stmt->execute();
 }
-echo "COMMENTS inserted successfully"."\n";
-
-
-
-
-// Generate and insert the fake data for the USERS_USERS table
-$already_inserted = array();
-$max_friends = count($users_ids) * 2;
-foreach ($users_ids as $user) {
-   $user_id1 = $user['id'];
-   $user_id2 = $users_ids[array_rand($users_ids)]['id']; //pick a random user id
-   while($user_id1 == $user_id2 AND !in_array($user_id1."-".$user_id2, $already_inserted) ){ //make sure the two users are different and not already inserted
-       $user_id2 = $users_ids[array_rand($users_ids)]['id']; //pick a random user id
-   }
-   $already_inserted[] = $user_id1."-".$user_id2;
-
-
-   $stmt = $conn->prepare("INSERT INTO USERS_USERS (USERS_id1, USERS_id2) VALUES  (:USERS_id1, :USERS_id2)");
-   $stmt->bindParam(':USERS_id1', $user_id1, PDO::PARAM_INT);
-   $stmt->bindParam(':USERS_id2', $user_id2, PDO::PARAM_INT);
-   $stmt->execute();
-}
-echo "USERS_USERS inserted successfully"."\n";
-
 
 echo "Fake data inserted successfully"."\n";
