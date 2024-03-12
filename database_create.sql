@@ -16,7 +16,7 @@ CREATE TABLE Cours (
 
 -- Table: Examen
 CREATE TABLE Examen (
-    idExamen integer  NOT NULL COMMENT 'numero identifiant de l''''examen',
+    idExamen integer AUTO_INCREMENT NOT NULL COMMENT 'numero identifiant de l''''examen',
     titreExamen varchar(128)  NOT NULL COMMENT 'titre de l''''examen',
     contenuExamen Text  NOT NULL COMMENT 'le texte qui represente le contenu de l''''examen',
     scoreMin integer  NOT NULL COMMENT 'score minimal pour reussir l''''exxamen. Doit être compris entre 40 et 100',
