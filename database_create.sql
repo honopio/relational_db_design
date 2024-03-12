@@ -51,12 +51,12 @@ CREATE TABLE Progression (
     Partie_numPartie integer  NOT NULL COMMENT 'identifiant de la partie',
     fini boolean  NOT NULL,
     Cours_numCours int  NOT NULL,
-    CONSTRAINT Progression_pk PRIMARY KEY (Utilisateur_idUtilisateur,Partie_numPartie)
+    CONSTRAINT Progression_pk PRIMARY KEY (Utilisateur_idUtilisateur,Partie_numPartie, Cours_numCours)
 ) COMMENT 'Mesure la progression de chaque etudiant sur chaque partie de cours';
 
 -- Table: Reglement
 CREATE TABLE Reglement (
-    numReglement integer  NOT NULL,
+    numReglement integer AUTO_INCREMENT NOT NULL,
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
     CONSTRAINT Reglement_pk PRIMARY KEY (numReglement)
@@ -64,7 +64,7 @@ CREATE TABLE Reglement (
 
 -- Table: Role
 CREATE TABLE Role (
-    idRole integer  NOT NULL COMMENT 'Identifiant unique du role',
+    idRole integer NOT NULL COMMENT 'Identifiant unique du role',
     nom varchar(128)  NOT NULL COMMENT 'Nom du role',
     description Text  NOT NULL COMMENT 'Description du role',
     CONSTRAINT Role_pk PRIMARY KEY (idRole)
@@ -78,7 +78,7 @@ CREATE TABLE Session (
     capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas être inferieur a 0. optionnel.',
     modalite varchar(128)  NOT NULL COMMENT 'modalite de l''''enseignement : soit en distanciel, soit en presentiel',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    CONSTRAINT Session_pk PRIMARY KEY (numSession)
+    CONSTRAINT Session_pk PRIMARY KEY (numSession, Cours_numCours)
 ) COMMENT 'Represente les sessions de travail qui portent sur un cours. On numerote les sessions par cours.';
 
 -- Table: Tentative
@@ -94,7 +94,7 @@ CREATE TABLE Tentative (
 
 -- Table: Utilisateur
 CREATE TABLE Utilisateur (
-    idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
+    idUtilisateur integer AUTO_INCREMENT NOT NULL COMMENT 'identifiant unique des utilisateurs',
     nom varchar(128)  NOT NULL COMMENT 'nom de l''''utilisateur',
     prenom varchar(128)  NOT NULL COMMENT 'prenom de l''''utilisateur',
     adresseMail varchar(128)  NOT NULL COMMENT 'adresse mail de l''''utilisateur',
