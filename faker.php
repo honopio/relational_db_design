@@ -315,13 +315,12 @@ foreach ($coursRows as $coursRow) {
         for ($j = 1; $j <= $nbSessions; $j++) {
             $Cours_numCours = $coursRow['numCours'];
             $numSession = $j; //session number increments starting from 1
-            $dateHeureDebut = $faker->dateTimeThisCentury('now', '+1 year')->format('Y-m-d H:i:00');
-            $dateHeureFin = $faker->dateTimeBetween($dateHeureDebut, $dateHeureDebut . '+12 hours')->format('Y-m-d H:i:00');
             $faker->boolean(50) ? $capaciteMax = null : $capaciteMax = $faker->numberBetween(5, 100); //50% chance of capaciteMax being null (optional)
             $modalite = $faker->randomElement(['distanciel', 'presentiel']);
 
             $stmt = $conn->prepare("INSERT INTO Session (numSession, dateHeureDebut, dateHeureFin, capaciteMax, modalite, Cours_numCours) VALUES (:numSession, :dateHeureDebut, :dateHeureFin, :capaciteMax, :modalite, :Cours_numCours)");
             $stmt->bindParam(':numSession', $numSession, PDO::PARAM_INT);
+            
             // if table partie has dates, dateHeureDebut must be between dateDebut and dateFin
             $dateCoursStmt = $conn->prepare("SELECT dateDebut, dateFin FROM Cours WHERE numCours = :Cours_numCours");
             $dateCoursStmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
