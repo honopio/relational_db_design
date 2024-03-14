@@ -269,6 +269,7 @@ echo "PROGRESSION inserted successfully"."\n";
 
 
 
+
 /* ---------- TABLE ROLE ----------------- */
 // Role table data isn't generated randomly, as it's a reference table
 
@@ -321,6 +322,26 @@ foreach ($coursRows as $coursRow) {
 
             $stmt = $conn->prepare("INSERT INTO Session (numSession, dateHeureDebut, dateHeureFin, capaciteMax, modalite, Cours_numCours) VALUES (:numSession, :dateHeureDebut, :dateHeureFin, :capaciteMax, :modalite, :Cours_numCours)");
             $stmt->bindParam(':numSession', $numSession, PDO::PARAM_INT);
+            // if table partie has dates, dateHeureDebut must be between dateDebut and dateFin
+            $dateCoursStmt = $conn->prepare("SELECT dateDebut, dateFin FROM Cours WHERE numCours = :Cours_numCours");
+            $dateCoursStmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
+            $dateCoursStmt->execute();
+            $dateCoursRows = $dateCoursStmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($dateCoursRows as $coursRow) {
+                $dateDebut = $coursRow['dateDebut'];
+                $dateFin = $coursRow['dateFin'];
+                if ($dateDebut != null) { //if dates are defined for this course
+                    $dateHeureDebut = $faker->dateTimeBetween($dateDebut, $dateFin)->format('Y-m-d H:i:00');
+                }
+            }
+            // same for dateHeureFin
+            foreach ($dateCoursRows as $coursRow) {
+                $dateDebut = $coursRow['dateDebut'];
+                $dateFin = $coursRow['dateFin'];
+                if ($dateDebut != null) { //if dates are defined for this course
+                    $dateHeureFin = $faker->dateTimeBetween($dateHeureDebut, $dateHeureDebut . '+12 hours')->format('Y-m-d H:i:00');
+                }
+            }
             $stmt->bindParam(':dateHeureDebut', $dateHeureDebut, PDO::PARAM_STR);
             $stmt->bindParam(':dateHeureFin', $dateHeureFin, PDO::PARAM_STR);
             $stmt->bindParam(':capaciteMax', $capaciteMax, PDO::PARAM_INT);
