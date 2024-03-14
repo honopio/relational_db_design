@@ -291,18 +291,15 @@ for ($i = 0; $i < 5; $i++) {
 echo "ROLE inserted successfully"."\n";
 
 /* ---------- TABLE SESSION ----------------- */
-//JAI RAJOUTE COURS_NUMCOURS COMME PRIMARY KEY PR NUMEROTER LES SESSIONS DANS CHQ COURS
 
-/* DDL : CREATE TABLE Session (
-    numSession integer  NOT NULL COMMENT 'numero identifiant de la session',
-    dateHeureDebut datetime  NOT NULL COMMENT 'date et heure de debut de session',
-    dateHeureFin datetime  NOT NULL COMMENT 'date et heure de fin de session',
-    capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas être inferieur a 0. optionnel.',
-    modalite varchar(128)  NOT NULL COMMENT 'modalite de l''''enseignement : soit en distanciel, soit en presentiel',
-    Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    CONSTRAINT Session_pk PRIMARY KEY (numSession, Cours_numCours)
-) COMMENT 'Represente les sessions de travail qui portent sur un cours. On numerote les sessions par cours.';
-*/
+
+/* ---------------------------
+- JAI RAJOUTE COURS_NUMCOURS COMME PRIMARY KEY PR NUMEROTER LES SESSIONS DANS CHQ COURS
+- SI LES PLACES SONT LIMITEES IL FAUT SINSCRIRE?
+- SI LE COURS A DES DATES DE DEBUT ET FIN, IL FAUT QUE LA SESSION SOIT ENTRE CES DATES?
+
+----------------------------------*/
+
 //fetch numCours from Cours table
 $coursStmt = $conn->prepare("SELECT numCours FROM Cours");
 $coursStmt->execute();
@@ -319,7 +316,7 @@ foreach ($coursRows as $coursRow) {
             $numSession = $j; //session number increments starting from 1
             $dateHeureDebut = $faker->dateTimeThisCentury('now', '+1 year')->format('Y-m-d H:i:00');
             $dateHeureFin = $faker->dateTimeBetween($dateHeureDebut, $dateHeureDebut . '+12 hours')->format('Y-m-d H:i:00');
-            $faker->boolean(50) ? $capaciteMax = null : $capaciteMax = $faker->numberBetween(1, 100); //50% chance of capaciteMax being null (optional field
+            $faker->boolean(50) ? $capaciteMax = null : $capaciteMax = $faker->numberBetween(5, 100); //50% chance of capaciteMax being null (optional)
             $modalite = $faker->randomElement(['distanciel', 'presentiel']);
 
             $stmt = $conn->prepare("INSERT INTO Session (numSession, dateHeureDebut, dateHeureFin, capaciteMax, modalite, Cours_numCours) VALUES (:numSession, :dateHeureDebut, :dateHeureFin, :capaciteMax, :modalite, :Cours_numCours)");
