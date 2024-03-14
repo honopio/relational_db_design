@@ -73,7 +73,7 @@ echo "COURS inserted successfully"."\n";
 
 
 
-/*---------- PARTIE TABLE-------------- */
+/*---------- PARTY TABLE-------------- */
 
 
 // Fetch numCours from Cours table
