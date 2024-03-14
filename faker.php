@@ -58,6 +58,7 @@ for ($i = 0; $i < 10; $i++) {
          $cout = $faker->numberBetween(1, 200);
     }
 
+   // Insert into Cours table
    $stmt = $conn->prepare("INSERT INTO Cours (intitule, description, preRequis, dateDebut, dateFin, cout) VALUES (:intitule, :description, :preRequis, :dateDebut, :dateFin, :cout)");
    $stmt->bindParam(':intitule', $intitule, PDO::PARAM_STR);
    $stmt->bindParam(':description', $description, PDO::PARAM_STR);
@@ -116,15 +117,18 @@ $partieStmt->execute();
 $partieRows = $partieStmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($partieRows as $partieRow) {
+    // Fetch Cours_numCours and numPartie from Partie table
     $Cours_numCours = $partieRow['Cours_numCours'];
     $numPartie = $partieRow['numPartie'];
 
+    // Generate random exam data
     $titreExamen = $faker->text(30);
     $contenuExamen = $faker->realText();
     /* scoreMin is a multiple of 5 between 40 and 100 */
     $rawScoreMin = $faker->numberBetween(40, 100);
     $scoreMin = round($rawScoreMin / 5) * 5;
 
+    // Insert into Examen table
     $stmt = $conn->prepare("INSERT INTO Examen (titreExamen, contenuExamen, scoreMin, Partie_numPartie, Cours_numCours) VALUES (:titreExamen, :contenuExamen, :scoreMin, :Partie_numPartie, :Cours_numCours)");
     $stmt->bindParam(':titreExamen', $titreExamen, PDO::PARAM_STR);
     $stmt->bindParam(':contenuExamen', $contenuExamen, PDO::PARAM_STR);
@@ -138,10 +142,12 @@ echo "EXAMEN inserted successfully"."\n";
 /* ---------- UTILISATEUR TABLE ---------- */
 
 for ($i = 0; $i < 20; $i++) {
+    // Generate random user data
     $nom = $faker->lastName;
     $prenom = $faker->firstName;
     $adresseMail = $faker->email;
 
+    // Insert into Utilisateur table
     $stmt = $conn->prepare("INSERT INTO Utilisateur (nom, prenom, adresseMail) VALUES (:nom, :prenom, :adresseMail)");
     $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
     $stmt->bindParam(':prenom', $prenom, PDO::PARAM_STR);
@@ -162,13 +168,14 @@ echo "UTILISATEUR inserted successfully"."\n";
     $utilisateurStmt->execute();
     $utilisateurRows = $utilisateurStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Fetch primary keys from Cours table
     $coursStmt = $conn->prepare("SELECT numCours FROM Cours");
     $coursStmt->execute();
     $coursRows = $coursStmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Insert into InscriptionCours table for each user
     foreach ($utilisateurRows as $utilisateurRow) {
-       
+       // Fetch primary key from Utilisateur table
         $Utilisateur_idUtilisateur = $utilisateurRow['idUtilisateur'];
 
         $usedCourses = array(); // Array to store the courses that have been used
@@ -207,7 +214,8 @@ echo "UTILISATEUR inserted successfully"."\n";
                 if ($faker->boolean(80)) {
                     $commentaireAvis = $faker->realText();
                 }
-
+            
+            // Insert into InscriptionCours table
             $stmt = $conn->prepare("INSERT INTO InscriptionCours (Utilisateur_idUtilisateur, Cours_numCours, dateInscription, noteAvis, commentaireAvis) VALUES (:Utilisateur_idUtilisateur, :Cours_numCours, :dateInscription, :noteAvis, :commentaireAvis)");
             $stmt->bindParam(':Utilisateur_idUtilisateur', $Utilisateur_idUtilisateur, PDO::PARAM_INT);
             $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
@@ -236,6 +244,7 @@ foreach ($utilisateurCoursRows as $utilisateurCoursRow) {
     $Utilisateur_idUtilisateur = $utilisateurCoursRow['Utilisateur_idUtilisateur'];
     $Cours_numCours = $utilisateurCoursRow['Cours_numCours'];
 
+    //fetch every partie of the course
     $partieStmt = $conn->prepare("SELECT numPartie FROM Partie WHERE Cours_numCours = :Cours_numCours");
     $partieStmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
     $partieStmt->execute();
@@ -247,6 +256,7 @@ foreach ($utilisateurCoursRows as $utilisateurCoursRow) {
 
         $fini = $faker->boolean(50) ? true : false; //50% chance of fini being true
 
+        // Insert into Progression table
         $stmt = $conn->prepare("INSERT INTO Progression (Utilisateur_idUtilisateur, Partie_numPartie, Cours_numCours, fini) VALUES (:Utilisateur_idUtilisateur, :Partie_numPartie, :Cours_numCours, :fini)");
         $stmt->bindParam(':Utilisateur_idUtilisateur', $Utilisateur_idUtilisateur, PDO::PARAM_INT);
         $stmt->bindParam(':Partie_numPartie', $numPartie, PDO::PARAM_INT);
@@ -281,6 +291,7 @@ $descriptions = ['Les etudiants peuvent s\'inscrire a des cours, passer des exam
 'Les administrateurs ont des droits etendus pour gerer la plateforme MOOC. Ils peuvent superviser les utilisateurs, gerer les problemes techniques, et assurer le bon fonctionnement de la plateforme.', 
 'Le personnel administratif a des privileges specifiques lies a l\'administration generale de la plateforme.'];
 
+// Insert into Role table
 for ($i = 0; $i < 5; $i++) {
     $stmt = $conn->prepare("INSERT INTO Role (idRole, nom, description) VALUES (:idRole, :nom, :description)");
     $stmt->bindParam(':idRole', $idRole[$i], PDO::PARAM_INT);
@@ -308,6 +319,7 @@ $coursRows = $coursStmt->fetchAll(PDO::FETCH_ASSOC);
 
 //for every cours, 80% chance of it having sessions
 foreach ($coursRows as $coursRow) {
+    //80% chance of the course having sessions
     if ($faker->boolean(80)) {
 
         //generate a random number of sessions btw 1 and 10
@@ -320,7 +332,7 @@ foreach ($coursRows as $coursRow) {
 
             $stmt = $conn->prepare("INSERT INTO Session (numSession, dateHeureDebut, dateHeureFin, capaciteMax, modalite, Cours_numCours) VALUES (:numSession, :dateHeureDebut, :dateHeureFin, :capaciteMax, :modalite, :Cours_numCours)");
             $stmt->bindParam(':numSession', $numSession, PDO::PARAM_INT);
-            
+
             // if table partie has dates, dateHeureDebut must be between dateDebut and dateFin
             $dateCoursStmt = $conn->prepare("SELECT dateDebut, dateFin FROM Cours WHERE numCours = :Cours_numCours");
             $dateCoursStmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
