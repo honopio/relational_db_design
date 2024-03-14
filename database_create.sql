@@ -37,12 +37,13 @@ CREATE TABLE InscriptionCours (
 
 -- Table: Partie
 CREATE TABLE Partie (
-    numPartie integer  NOT NULL COMMENT 'identifiant de la partie',
+    numPartie integer AUTO_INCREMENT NOT NULL COMMENT 'identifiant de la partie',
     titrePartie varchar(128)  NOT NULL COMMENT 'titre de chaque partie',
     Contenu Text  NOT NULL COMMENT 'contenu de la partie du cours',
     numChapitre integer  NOT NULL COMMENT 'numero de chapitre auquel la partie appartient',
+    ordreChapitre integer  NOT NULL COMMENT 'ordre de la partie dans le chapitre',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    CONSTRAINT Partie_pk PRIMARY KEY (numPartie,Cours_numCours)
+    CONSTRAINT Partie_pk PRIMARY KEY (numPartie)
 ) COMMENT 'Les parties qui composent chaque cours. ';
 
 -- Table: Progression
@@ -128,16 +129,16 @@ ALTER TABLE InscriptionCours ADD CONSTRAINT Cours_InscriptionCours FOREIGN KEY C
     REFERENCES Cours (numCours);
 
 -- Reference: Examen_Partie (table: Examen)
-ALTER TABLE Examen ADD CONSTRAINT Examen_Partie FOREIGN KEY Examen_Partie (Partie_numPartie,Cours_numCours)
-    REFERENCES Partie (numPartie,Cours_numCours);
+ALTER TABLE Examen ADD CONSTRAINT Examen_Partie FOREIGN KEY Examen_Partie (Partie_numPartie)
+    REFERENCES Partie (numPartie);
 
 -- Reference: Partie_Cours (table: Partie)
 ALTER TABLE Partie ADD CONSTRAINT Partie_Cours FOREIGN KEY Partie_Cours (Cours_numCours)
     REFERENCES Cours (numCours);
 
 -- Reference: Partie_Progression (table: Progression)
-ALTER TABLE Progression ADD CONSTRAINT Partie_Progression FOREIGN KEY Partie_Progression (Partie_numPartie,Cours_numCours)
-    REFERENCES Partie (numPartie,Cours_numCours);
+ALTER TABLE Progression ADD CONSTRAINT Partie_Progression FOREIGN KEY Partie_Progression (Partie_numPartie)
+    REFERENCES Partie (numPartie);
 
 -- Reference: Reglement_Cours (table: Reglement)
 ALTER TABLE Reglement ADD CONSTRAINT Reglement_Cours FOREIGN KEY Reglement_Cours (Cours_numCours)

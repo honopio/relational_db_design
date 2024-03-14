@@ -43,7 +43,7 @@ $faker = Faker\Factory::create();
 for ($i = 0; $i < 10; $i++) {
    $intitule = $faker->text(128);
    $description = $faker->realText();
-   $preRequis = $faker->realText(); //is preRequis supposed to be a text?
+   $preRequis = $faker->realText(); // only text
 
    //70% chance of generating both dates
     if ($faker->boolean(70)) {
@@ -51,7 +51,7 @@ for ($i = 0; $i < 10; $i++) {
          $dateFin = $faker->dateTimeBetween($dateDebut . "+10 days", $dateDebut . '+1 year')->format('Y-m-d'); //dateFin is between dateDebut and 1 year after
     }
 
-    //50% chance of $cout being 0 <-> 50% chance of the class being free
+    //50% chance of $cout being 0
     if ($faker->boolean(50)) {
          $cout = 0;
     } else {
@@ -86,15 +86,42 @@ foreach ($coursRows as $coursRow) {
     $Cours_numCours = $coursRow['numCours'];
     
     //random number of parties, between 1 and 8 per cours
-    $numParties = $faker->numberBetween(1, 8); // Random number of parties between 1 and 10 per course
+    //$numParties = $faker->numberBetween(1, 8); // Random number of parties between 1 and 10 per course
+
+    // random number of Chapitre, between 1 and 5 per cours
+    $howManyChapitre = $faker->numberBetween(1, 5);
+    for ($i=1; $i <= $howManyChapitre; $i++) {
+        $numChapitre = $i;  //numChapitre auto increments starting from 1
+
+        // random number of parties per chapitre, between 1 and 3 per cours
+        $howManyPartiesPerChapitre = $faker->numberBetween(1, 3);
+
+        for ($j=1; $j <= $howManyPartiesPerChapitre; $j++) {
+            $ordreChapitre = $j;  //numPartie auto increments starting from 1
+            $titrePartie = $faker->text(128);
+            $Contenu = $faker->realText();        
+
+            $stmt = $conn->prepare("INSERT INTO Partie (titrePartie, Contenu, numChapitre, Cours_numCours, numPartie, ordreChapitre) VALUES (:titrePartie, :Contenu, :numChapitre, :Cours_numCours, :numPartie, :ordreChapitre)");
+            $stmt->bindParam(':titrePartie', $titrePartie, PDO::PARAM_STR);
+            $stmt->bindParam(':numPartie', $numPartie, PDO::PARAM_STR);
+            $stmt->bindParam(':Contenu', $Contenu, PDO::PARAM_STR);
+            $stmt->bindParam(':numChapitre', $numChapitre, PDO::PARAM_INT);
+            $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
+            $stmt->bindParam(':ordreChapitre', $ordreChapitre, PDO::PARAM_INT);
+            $stmt->execute();
+        }
+
+    }
+    
+
+    //assign each partie to an increasing ordreChapitre, once reached howManyPartiesPerChapitre, increase the numChapitre, up to howManyChapitre
+   
+    
 
     for ($j = 1; $j <= $numParties; $j++) {
         $numPartie = $j;  //numPartie auto increments starting from 1
         $titrePartie = $faker->text(128);
-        $Contenu = $faker->realText();
-
-        /* --------A MODIFIER -----------*/
-        $numChapitre = 1; 
+        $Contenu = $faker->realText();        
 
         $stmt = $conn->prepare("INSERT INTO Partie (titrePartie, Contenu, numChapitre, Cours_numCours, numPartie) VALUES (:titrePartie, :Contenu, :numChapitre, :Cours_numCours, :numPartie)");
         $stmt->bindParam(':titrePartie', $titrePartie, PDO::PARAM_STR);
@@ -344,6 +371,9 @@ foreach ($coursRows as $coursRow) {
                 if ($dateDebut != null) { //if dates are defined for this course
                     $dateHeureDebut = $faker->dateTimeBetween($dateDebut, $dateFin)->format('Y-m-d H:i:00');
                 }
+                else {
+                    $dateHeureDebut = $faker->dateTimeBetween('now', '+1 year')->format('Y-m-d H:i:00');
+                }
             }
             // same for dateHeureFin
             foreach ($dateCoursRows as $coursRow) {
@@ -352,13 +382,16 @@ foreach ($coursRows as $coursRow) {
                 if ($dateDebut != null) { //if dates are defined for this course
                     $dateHeureFin = $faker->dateTimeBetween($dateHeureDebut, $dateHeureDebut . '+12 hours')->format('Y-m-d H:i:00');
                 }
-            }
+                else {
+                    $dateHeureFin = $faker->dateTimeBetween($dateHeureDebut, $dateHeureDebut . '+12 hours')->format('Y-m-d H:i:00');
+                }
             $stmt->bindParam(':dateHeureDebut', $dateHeureDebut, PDO::PARAM_STR);
             $stmt->bindParam(':dateHeureFin', $dateHeureFin, PDO::PARAM_STR);
             $stmt->bindParam(':capaciteMax', $capaciteMax, PDO::PARAM_INT);
             $stmt->bindParam(':modalite', $modalite, PDO::PARAM_STR);
             $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
             $stmt->execute();
+            }
         }
     }
 }
