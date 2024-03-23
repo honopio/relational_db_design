@@ -79,7 +79,7 @@ CREATE TABLE Session (
     capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas être inferieur a 0. optionnel.',
     modalite varchar(128)  NOT NULL COMMENT 'modalite de l''''enseignement : soit en distanciel, soit en presentiel',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    CONSTRAINT Session_pk PRIMARY KEY (numSession, Cours_numCours)
+    CONSTRAINT Session_pk PRIMARY KEY (numSession)
 ) COMMENT 'Represente les sessions de travail qui portent sur un cours. On numerote les sessions par cours.';
 
 -- Table: Tentative

@@ -18,23 +18,6 @@ try {
 } catch (PDOException $e) {
    die("Connection failed: " . $e->getMessage());
 }
-/*
-// Truncate or delete data from tables
-$tables = ['InscriptionCours', 'Examen', 'Partie', 'Cours']; // Adjust the table names as needed
-
-foreach ($tables as $table) {
-    if ($table == 'Cours') {
-        // Delete related records in Partie first
-        $stmt = $conn->prepare("DELETE FROM Partie WHERE Cours_numCours IN (SELECT numCours FROM Cours)");
-        $stmt->execute();
-
-        // Then delete records in Cours
-        $conn->exec("DELETE FROM $table");
-    } else {
-        $conn->exec("DELETE FROM $table");
-    }
-}
-*/
 
 $faker = Faker\Factory::create();
 
@@ -112,25 +95,7 @@ foreach ($coursRows as $coursRow) {
         }
 
     }
-    
-
-    //assign each partie to an increasing ordreChapitre, once reached howManyPartiesPerChapitre, increase the numChapitre, up to howManyChapitre
-   
-    
-
-    // for ($j = 1; $j <= $numParties; $j++) {
-    //     $numPartie = $j;  //numPartie auto increments starting from 1
-    //     $titrePartie = $faker->text(128);
-    //     $Contenu = $faker->realText();        
-
-    //     $stmt = $conn->prepare("INSERT INTO Partie (titrePartie, Contenu, numChapitre, Cours_numCours, numPartie) VALUES (:titrePartie, :Contenu, :numChapitre, :Cours_numCours, :numPartie)");
-    //     $stmt->bindParam(':titrePartie', $titrePartie, PDO::PARAM_STR);
-    //     $stmt->bindParam(':numPartie', $numPartie, PDO::PARAM_STR);
-    //     $stmt->bindParam(':Contenu', $Contenu, PDO::PARAM_STR);
-    //     $stmt->bindParam(':numChapitre', $numChapitre, PDO::PARAM_INT);
-    //     $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
-    //     $stmt->execute();
-    // }
+ 
 }
 echo "PARTIE inserted successfully"."\n";
 
@@ -318,12 +283,6 @@ foreach ($reglementRows as $reglementRow) {
 }
 
 
-$numReglement = 1; //auto increments starting from 1
-$Utilisateur_idUtilisateur = $reglementRows['Utilisateur_idUtilisateur'];
-$Cours_numCours = $reglementRows['Cours_numCours'];
-
-
-
 /* ---------- TABLE ROLE ----------------- */
 // Role table data isn't generated randomly, as it's a reference table
 
@@ -349,23 +308,25 @@ echo "ROLE inserted successfully"."\n";
 
 /* ---------- TABLE SESSION ----------------- */
 
+//var to store the unique session id
+$sessionIncrementer = 1;
 
+//get all numCours from Cours table in an array
+$sessionCoursStmt = $conn->prepare("SELECT numCours FROM Cours");
+$sessionCoursStmt->execute();
+$coursRowsForSession = $sessionCoursStmt->fetchAll(PDO::FETCH_ASSOC);
 
-//fetch numCours from Cours table
-$coursStmt = $conn->prepare("SELECT numCours FROM Cours");
-$coursStmt->execute();
-$coursRows = $coursStmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($coursRowsForSession as $coursRowForSession) {
+    //for every cours, 50% chance of the course having sessions
+    if ($faker->boolean(50)) {
 
-//for every cours, 80% chance of it having sessions
-foreach ($coursRows as $coursRow) {
-    //80% chance of the course having sessions
-    if ($faker->boolean(80)) {
-
-        //generate a random number of sessions btw 1 and 10
-        $nbSessions = $faker->numberBetween(1, 10);
+        //generate a random number of sessions btw 1 and 5
+        $nbSessions = $faker->numberBetween(1, 5);
         for ($j = 1; $j <= $nbSessions; $j++) {
-            $Cours_numCours = $coursRow['numCours'];
-            $numSession = $j; //session number increments starting from 1
+            //$Cours_numCours is the numCours from the Cours table //var_dump($coursRow); die;
+            $Cours_numCours = $coursRowForSession['numCours'];
+            $numSession = $sessionIncrementer ; //session number increments starting from 1
+            $sessionIncrementer++;
             $faker->boolean(50) ? $capaciteMax = null : $capaciteMax = $faker->numberBetween(5, 100); //50% chance of capaciteMax being null (optional)
             $modalite = $faker->randomElement(['distanciel', 'presentiel']);
 
@@ -407,20 +368,11 @@ foreach ($coursRows as $coursRow) {
         }
     }
 }
+echo "SESSION inserted successfully"."\n";
 
 
 /* ---------- TABLE TENTATIVE ----------------- */
-/* DDL :
-CREATE TABLE Tentative (
-    numTentative integer  NOT NULL COMMENT 'Numero de la tentative d''''un etudiant sur un examen. On numerote les tentatives qu''''un etudiant fait sur un examen.',
-    date date  NOT NULL COMMENT 'date a laquelle la tentative est faite',
-    score integer  NULL COMMENT 'resultat de la tentative, compris entre 0 et 100. attribut pas mandatory car le score n''''est pas connu au moment de l''''enregistrement de la tentative',
-    reussi boolean  NULL COMMENT 'Reussi est true si le score est superieur ou egal au scoreMin de l''''examen. On l''''entre comme attribut car on demande une procedure qui marque les tentatives comme reussies.',
-    Examen_idExamen integer  NOT NULL COMMENT 'numero identifiant de l''''examen',
-    Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
-    CONSTRAINT Tentative_pk PRIMARY KEY (numTentative)
-) COMMENT 'Represente une tentative d''''un etudiant de passer un examen. La tentative est reussie si le score est superieur ou egal au scoreMin de l''''examen';
-*/
+
 //fetch every user and numcours from inscriptionCours where a partie has an examen
 $inscriptionCoursStmt = $conn->prepare("SELECT Utilisateur_idUtilisateur, Cours_numCours FROM InscriptionCours WHERE Cours_numCours IN (SELECT Cours_numCours FROM Examen)");
 $inscriptionCoursStmt->execute();
@@ -465,6 +417,7 @@ foreach ($inscriptionCoursRows as $inscriptionCoursRow) {
         }
     }
 }
+echo "TENTATIVE inserted successfully"."\n";
 
 
 /* ---------- TABLE UTILISATEUR_ROLE ----------------- */
@@ -483,14 +436,18 @@ $utilisateurRows = $utilisateurStmt->fetchAll(PDO::FETCH_ASSOC);
 foreach ($utilisateurRows as $utilisateurRow) {
     $Utilisateur_idUtilisateur = $utilisateurRow['idUtilisateur'];
     $nbRoles = $faker->numberBetween(1, 3);
+
+    //a user can't have the same idRole twice
+    //create an array to store the roles that have been used for each user
+    $usedRoles = array();
+
     for ($j = 1; $j <= $nbRoles; $j++) {
-        //a user can't have twice the same idRole
-        //create an array to store the roles that have been used
-        $usedRoles = array();
+
         do {
             $Role_idRole = $faker->numberBetween(1, 5); //random role between 1 and 5
         } while (in_array($Role_idRole, $usedRoles)); // Check if the role has been used for this user
-        $usedRoles[] = $Role_idRole; // Add the role to the used roles array
+        // Add the role to the used roles array
+        $usedRoles[] = $Role_idRole ;
 
         // Insert into Utilisateur_Role table
         $stmt = $conn->prepare("INSERT INTO Utilisateur_Role (Utilisateur_idUtilisateur, Role_idRole) VALUES (:Utilisateur_idUtilisateur, :Role_idRole)");
@@ -499,30 +456,32 @@ foreach ($utilisateurRows as $utilisateurRow) {
         $stmt->execute();
     }
 }
+echo "UTILISATEUR_ROLE inserted successfully"."\n";
+
 
 
 
 /* ---------- TABLE UTILISATEUR_SESSION ----------------- */
 
 //a user can participate in a session for a course he is enrolled in
-//fetch every user and course from inscriptionCours where the course has sessions
-$inscriptionCoursStmt = $conn->prepare("SELECT Utilisateur_idUtilisateur, Cours_numCours FROM InscriptionCours WHERE Cours_numCours IN (SELECT Cours_numCours FROM Session)");
-$inscriptionCoursStmt->execute();
-$inscriptionCoursRows = $inscriptionCoursStmt->fetchAll(PDO::FETCH_ASSOC);
+//fetch every user from inscriptionCours where the course has sessions
+$inscriptionCoursStmt2 = $conn->prepare("SELECT Utilisateur_idUtilisateur, Cours_numCours FROM InscriptionCours WHERE Cours_numCours IN (SELECT Cours_numCours FROM Session)");
+$inscriptionCoursStmt2->execute();
+$inscriptionCoursRows2 = $inscriptionCoursStmt2->fetchAll(PDO::FETCH_ASSOC);
 
 //for every user enrolled in a course with sessions
-foreach ($inscriptionCoursRows as $inscriptionCoursRow) {
-    $Utilisateur_idUtilisateur = $inscriptionCoursRow['Utilisateur_idUtilisateur'];
-    $Cours_numCours = $inscriptionCoursRow['Cours_numCours'];
-
+foreach ($inscriptionCoursRows2 as $inscriptionCoursRow2) {
+    $Utilisateur_idUtilisateur = $inscriptionCoursRow2['Utilisateur_idUtilisateur'];
+    $Cours_numCours = $inscriptionCoursRow2['Cours_numCours'];
     //fetch every session of the course
     $sessionStmt = $conn->prepare("SELECT numSession FROM Session WHERE Cours_numCours = :Cours_numCours");
     $sessionStmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
     $sessionStmt->execute();
     $sessionRows = $sessionStmt->fetchAll(PDO::FETCH_ASSOC);
-
     //for every session of the course
     foreach ($sessionRows as $sessionRow) {
+        //var_dump($sessionRows);die;
+
         $Session_numSession = $sessionRow['numSession'];
 
         // have a 20% chance of the user participating in the session
@@ -535,5 +494,6 @@ foreach ($inscriptionCoursRows as $inscriptionCoursRow) {
         }
     }
 }
+echo "UTILISATEUR_SESSION inserted successfully"."\n";
 
 echo "Fake data inserted successfully"."\n";
