@@ -1,27 +1,26 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2024-03-11 17:49:13.137
+-- Last modification date: 2024-03-23 22:01:44.43
 
 -- tables
 -- Table: Cours
 CREATE TABLE Cours (
-    numCours integer AUTO_INCREMENT NOT NULL COMMENT 'le numero identifiant de chaque cours',
+    numCours integer  NOT NULL AUTO_INCREMENT COMMENT 'le numero identifiant de chaque cours',
     intitule varchar(128)  NOT NULL COMMENT 'le titre du cours',
     description text  NOT NULL COMMENT 'texte qui decrit le cours',
     preRequis text  NOT NULL COMMENT 'Texte qui precise les pre-requis du cours',
-    dateDebut date  NULL,
-    dateFin date  NULL,
-    cout integer  NOT NULL COMMENT 'prix du cours, ne doit pas être inferieur a 0',
+    dateDebut date  NULL COMMENT 'date de debut du cours (optionnel)',
+    dateFin date  NULL COMMENT 'date de fin du cours (optionnel)',
+    cout integer  NOT NULL COMMENT 'prix du cours, ne doit pas etre inferieur a 0',
     CONSTRAINT Cours_pk PRIMARY KEY (numCours)
 ) COMMENT 'Les cours de la plateforme MOOC';
 
 -- Table: Examen
 CREATE TABLE Examen (
-    idExamen integer AUTO_INCREMENT NOT NULL COMMENT 'numero identifiant de l''''examen',
+    idExamen integer  NOT NULL AUTO_INCREMENT COMMENT 'numero identifiant de l''''examen',
     titreExamen varchar(128)  NOT NULL COMMENT 'titre de l''''examen',
     contenuExamen Text  NOT NULL COMMENT 'le texte qui represente le contenu de l''''examen',
-    scoreMin integer  NOT NULL COMMENT 'score minimal pour reussir l''''exxamen. Doit être compris entre 40 et 100',
-    Partie_numPartie integer  NOT NULL,
-    Cours_numCours int  NOT NULL,
+    scoreMin integer  NOT NULL COMMENT 'score minimal pour reussir l''''exxamen. Doit etre compris entre 40 et 100',
+    Partie_numPartie integer  NOT NULL COMMENT 'Partie sur laquelle porte l''''examen',
     CONSTRAINT Examen_pk PRIMARY KEY (idExamen)
 ) COMMENT 'Les examens portent sur des parties de cours.';
 
@@ -29,20 +28,20 @@ CREATE TABLE Examen (
 CREATE TABLE InscriptionCours (
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    dateInscription date  NOT NULL,
-    noteAvis integer  NULL,
-    commentaireAvis Text  NULL,
+    dateInscription date  NOT NULL COMMENT 'date d''''''''inscription d''''''''un eleve a un cours',
+    noteAvis integer  NULL COMMENT 'note donnee par l''''''''eleve au cours. optionnel',
+    commentaireAvis Text  NULL COMMENT 'commentaire donne par l''''''''eleve au cours. optionnel',
     CONSTRAINT InscriptionCours_pk PRIMARY KEY (Utilisateur_idUtilisateur,Cours_numCours)
-);
+) COMMENT "Inscription d'un eleve a un cours";
 
 -- Table: Partie
 CREATE TABLE Partie (
-    numPartie integer AUTO_INCREMENT NOT NULL COMMENT 'identifiant de la partie',
+    numPartie integer  NOT NULL AUTO_INCREMENT COMMENT 'identifiant de la partie',
     titrePartie varchar(128)  NOT NULL COMMENT 'titre de chaque partie',
     Contenu Text  NOT NULL COMMENT 'contenu de la partie du cours',
-    numChapitre integer  NOT NULL COMMENT 'numero de chapitre auquel la partie appartient',
-    ordreChapitre integer  NOT NULL COMMENT 'ordre de la partie dans le chapitre',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
+    numChapitre integer  NOT NULL COMMENT 'numero de chapitre auquel la partie appartient',
+    ordreChapitre int  NOT NULL COMMENT 'Position de la partie dans le chapitre',
     CONSTRAINT Partie_pk PRIMARY KEY (numPartie)
 ) COMMENT 'Les parties qui composent chaque cours. ';
 
@@ -50,22 +49,21 @@ CREATE TABLE Partie (
 CREATE TABLE Progression (
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Partie_numPartie integer  NOT NULL COMMENT 'identifiant de la partie',
-    fini boolean  NOT NULL,
-    Cours_numCours int  NOT NULL,
-    CONSTRAINT Progression_pk PRIMARY KEY (Utilisateur_idUtilisateur,Partie_numPartie, Cours_numCours)
+    fini boolean  NOT NULL COMMENT 'Fini est true si l''''''''utilisateur a fini la partie',
+    CONSTRAINT Progression_pk PRIMARY KEY (Utilisateur_idUtilisateur,Partie_numPartie)
 ) COMMENT 'Mesure la progression de chaque etudiant sur chaque partie de cours';
 
 -- Table: Reglement
 CREATE TABLE Reglement (
-    numReglement integer AUTO_INCREMENT NOT NULL,
+    numReglement integer  NOT NULL AUTO_INCREMENT COMMENT 'identifiant unique du reglement',
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
     CONSTRAINT Reglement_pk PRIMARY KEY (numReglement)
-) COMMENT 'Reglement d''''un etudiant pour un cours dont le coût est superieur a 0.';
+) COMMENT 'Reglement d''''un etudiant pour un cours dont le coût payant.';
 
 -- Table: Role
 CREATE TABLE Role (
-    idRole integer NOT NULL COMMENT 'Identifiant unique du role',
+    idRole integer  NOT NULL COMMENT 'Identifiant unique du role',
     nom varchar(128)  NOT NULL COMMENT 'Nom du role',
     description Text  NOT NULL COMMENT 'Description du role',
     CONSTRAINT Role_pk PRIMARY KEY (idRole)
@@ -73,10 +71,10 @@ CREATE TABLE Role (
 
 -- Table: Session
 CREATE TABLE Session (
-    numSession integer  NOT NULL COMMENT 'numero identifiant de la session',
+    numSession integer  NOT NULL AUTO_INCREMENT COMMENT 'numero identifiant de la session',
     dateHeureDebut datetime  NOT NULL COMMENT 'date et heure de debut de session',
     dateHeureFin datetime  NOT NULL COMMENT 'date et heure de fin de session',
-    capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas être inferieur a 0. optionnel.',
+    capaciteMax integer  NULL COMMENT 'le nombre de place maximal pour la session. ne doit pas etre inferieur a 0. optionnel.',
     modalite varchar(128)  NOT NULL COMMENT 'modalite de l''''enseignement : soit en distanciel, soit en presentiel',
     Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
     CONSTRAINT Session_pk PRIMARY KEY (numSession)
@@ -95,33 +93,26 @@ CREATE TABLE Tentative (
 
 -- Table: Utilisateur
 CREATE TABLE Utilisateur (
-    idUtilisateur integer AUTO_INCREMENT NOT NULL COMMENT 'identifiant unique des utilisateurs',
+    idUtilisateur integer  NOT NULL AUTO_INCREMENT COMMENT 'identifiant unique des utilisateurs',
     nom varchar(128)  NOT NULL COMMENT 'nom de l''''utilisateur',
     prenom varchar(128)  NOT NULL COMMENT 'prenom de l''''utilisateur',
     adresseMail varchar(128)  NOT NULL COMMENT 'adresse mail de l''''utilisateur',
     CONSTRAINT Utilisateur_pk PRIMARY KEY (idUtilisateur)
 ) COMMENT 'Les utilisateurs inscrits sur la plateforme.';
 
--- Table: Utilisateur_Cours
-CREATE TABLE Utilisateur_Cours (
-    Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
-    Cours_numCours integer  NOT NULL COMMENT 'le numero identifiant de chaque cours',
-    CONSTRAINT Utilisateur_Cours_pk PRIMARY KEY (Utilisateur_idUtilisateur,Cours_numCours)
-);
-
 -- Table: Utilisateur_Role
 CREATE TABLE Utilisateur_Role (
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Role_idRole integer  NOT NULL COMMENT 'Identifiant unique du role',
     CONSTRAINT Utilisateur_Role_pk PRIMARY KEY (Utilisateur_idUtilisateur,Role_idRole)
-);
+) COMMENT 'Les roles des utilisateurs';
 
 -- Table: Utilisateur_Session
 CREATE TABLE Utilisateur_Session (
     Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
     Session_numSession integer  NOT NULL COMMENT 'numero identifiant de la session',
     CONSTRAINT Utilisateur_Session_pk PRIMARY KEY (Utilisateur_idUtilisateur,Session_numSession)
-);
+) COMMENT 'Les sessions auxquelles les utilisateurs sont inscrits';
 
 -- foreign keys
 -- Reference: Cours_InscriptionCours (table: InscriptionCours)
@@ -159,14 +150,6 @@ ALTER TABLE Tentative ADD CONSTRAINT Tentative_Etudiant FOREIGN KEY Tentative_Et
 -- Reference: Tentative_Examen (table: Tentative)
 ALTER TABLE Tentative ADD CONSTRAINT Tentative_Examen FOREIGN KEY Tentative_Examen (Examen_idExamen)
     REFERENCES Examen (idExamen);
-
--- Reference: Utilisateur_Cours_Cours (table: Utilisateur_Cours)
-ALTER TABLE Utilisateur_Cours ADD CONSTRAINT Utilisateur_Cours_Cours FOREIGN KEY Utilisateur_Cours_Cours (Cours_numCours)
-    REFERENCES Cours (numCours);
-
--- Reference: Utilisateur_Cours_Utilisateur (table: Utilisateur_Cours)
-ALTER TABLE Utilisateur_Cours ADD CONSTRAINT Utilisateur_Cours_Utilisateur FOREIGN KEY Utilisateur_Cours_Utilisateur (Utilisateur_idUtilisateur)
-    REFERENCES Utilisateur (idUtilisateur);
 
 -- Reference: Utilisateur_InscriptionCours (table: InscriptionCours)
 ALTER TABLE InscriptionCours ADD CONSTRAINT Utilisateur_InscriptionCours FOREIGN KEY Utilisateur_InscriptionCours (Utilisateur_idUtilisateur)
