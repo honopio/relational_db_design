@@ -28,10 +28,13 @@ for ($i = 0; $i < 10; $i++) {
    $description = $faker->realText();
    $preRequis = $faker->realText(); // only text
 
-   //70% chance of generating both dates
-    if ($faker->boolean(70)) {
+   //50% chance of generating both dates
+    if ($faker->boolean(50)) {
          $dateDebut = $faker->date();
          $dateFin = $faker->dateTimeBetween($dateDebut . "+10 days", $dateDebut . '+1 year')->format('Y-m-d'); //dateFin is between dateDebut and 1 year after
+    } else { //else dates are null
+         $dateDebut = null;
+         $dateFin = null;
     }
 
     //50% chance of $cout being 0
@@ -184,13 +187,16 @@ echo "UTILISATEUR inserted successfully"."\n";
 
             
             /* if the course has dates, dateInscription must be between dateDebut and dateFin */
-            $dateCoursStmt = $conn->prepare("SELECT dateDebut, dateFin FROM Cours");
+            $dateCoursStmt = $conn->prepare("SELECT dateDebut, dateFin FROM Cours WHERE numCours = :numCours");
+            $dateCoursStmt->bindParam(':numCours', $Cours_numCours, PDO::PARAM_INT);
             $dateCoursStmt->execute();
-            $dateCoursRows = $dateCoursStmt->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($dateCoursRows as $coursRow) {
+            $coursRow = $dateCoursStmt->fetch(PDO::FETCH_ASSOC);
+
+            // si la requete retourne un resultat valide, on peut inserer une date d'inscription
+            if ($coursRow) {
                 $dateDebut = $coursRow['dateDebut'];
                 $dateFin = $coursRow['dateFin'];
-                if ($dateDebut != null) { //if dates are defined for this course
+                if ($dateDebut != null && $dateFin != null) { //if dates are defined for this course
                     $dateInscription = $faker->dateTimeBetween($dateDebut, $dateFin)->format('Y-m-d');
                 } else {
                     $dateInscription = $faker->date(); //else, random date
@@ -285,7 +291,7 @@ foreach ($reglementRows as $reglementRow) {
 // Role table data isn't generated randomly, as it's a reference table
 
 $idRole = [1, 2, 3, 4, 5];
-$nom = ['etudiant', 'createur', 'formateur', 'administrateur', 'personnesAdmin'];
+$nom = ['etudiant', 'createur', 'formateur', 'administrateur', 'personnelAdmin'];
 $descriptions = ['Les etudiants peuvent s\'inscrire a des cours, passer des examens, evaluer les cours qu\'ils ont suivi', 
 'Les createurs de cours concoivent de nouveaux cours pour la plateforme.', 
 'Les formateurs peuvent encadrer des cours, des sessions, et evaluer les etudiants.', 
@@ -374,8 +380,6 @@ $inscriptionCoursStmt = $conn->prepare("SELECT InscriptionCours.Cours_numCours, 
 $inscriptionCoursStmt->execute();
 $inscriptionCoursRows = $inscriptionCoursStmt->fetchAll(PDO::FETCH_ASSOC);
 
-//$inscriptionCoursStmt = $conn->prepare("SELECT Utilisateur_idUtilisateur, Cours_numCours FROM InscriptionCours WHERE Cours_numCours IN (SELECT Cours_numCours FROM Examen)");
-
 $incrementeur = 1; //variable pour numTentative
 //for every user enrolled in a course with an exam
 foreach ($inscriptionCoursRows as $inscriptionCoursRow) {
@@ -386,11 +390,6 @@ foreach ($inscriptionCoursRows as $inscriptionCoursRow) {
     $examenStmt->bindParam(':Cours_numCours', $inscriptionCoursRow['Cours_numCours'], PDO::PARAM_INT);
     $examenStmt->execute();
     $examenRows = $examenStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    /*$examenStmt = $conn->prepare("SELECT idExamen FROM Examen WHERE Cours_numCours = :Cours_numCours");
-    $examenStmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
-    $examenStmt->execute();
-    $examenRows = $examenStmt->fetchAll(PDO::FETCH_ASSOC);*/
 
     //for every examen of the course
     foreach ($examenRows as $examenRow) {
