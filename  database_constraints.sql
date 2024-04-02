@@ -13,6 +13,17 @@ BEGIN
     END IF;
 END //
 
+-- Requête de test qui fonctionne
+INSERT INTO Cours (numCours, intitule, dateDebut, dateFin, description, cout, preRequis) VALUES (24, 'Cours X', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
+
+-- Requête de test qui ne fonctionne pas
+INSERT INTO Cours (numCours, intitule, dateDebut, dateFin, description, cout, preRequis) VALUES (25, 'Cours Y', '2020-01-02', '2020-01-01', 'Description', 100, 'Pre-requis');
+
+
+--------------------SUIVANT --------------------
+-- FIND THE FUCKING ISSUE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 -- trigger to check if the inscription date is within the course's beginning and end dates
 CREATE TRIGGER dateInscrCours
 BEFORE INSERT ON InscriptionCours
@@ -35,6 +46,16 @@ BEGIN
     END IF;
 END //
 
+-- Requête de test qui fonctionne
+INSERT INTO InscriptionCours (Utilisateur_idUtilisateur, Cours_numCours, dateInscription) VALUES (1, 24, '2020-01-01');
+
+-- Requête de test qui ne fonctionne pas
+INSERT INTO InscriptionCours (Utilisateur_idUtilisateur, Cours_numCours, dateInscription) VALUES (2, 24, '2019-01-01');
+
+
+--------------------SUIVANT --------------------
+
+
 -- trigger to check if the session starts before it ends
 CREATE TRIGGER dateSession
 BEFORE INSERT ON Session
@@ -45,6 +66,16 @@ BEGIN
         SET MESSAGE_TEXT = 'Session start date must be before the end date';
     END IF;
 END //
+
+-- Requête de test qui fonctionne
+INSERT INTO Session (numSession, Cours_numCours, dateHeureDebut, dateHeureFin, capaciteMax, modalite) VALUES (18, 24, '2020-01-01', '2020-01-02', 10, 'modalite');
+
+-- Requête de test qui ne fonctionne pas
+INSERT INTO Session (numSession, Cours_numCours, dateHeureDebut, dateHeureFin, capaciteMax, modalite) VALUES (28, 24, '2020-01-02', '2020-01-01', 10, 'modalite');
+
+
+--------------------SUIVANT --------------------
+
 
 -- trigger to check if the session's date is within the course's beginning and end dates
 CREATE TRIGGER dateSessionCours
@@ -68,6 +99,16 @@ BEGIN
     END IF;
 END //
 
+-- Requête de test qui fonctionne
+INSERT INTO Session (numSession, Cours_numCours, dateHeureDebut, dateHeureFin, capaciteMax, modalite) VALUES (19, 24, '2020-01-01', '2020-01-02', 10, 'modalite');
+
+-- Requête de test qui ne fonctionne pas
+INSERT INTO Session (numSession, Cours_numCours, dateHeureDebut, dateHeureFin, capaciteMax, modalite) VALUES (29, 24, '2020-01-03', '2020-01-02', 10, 'modalite');
+
+
+--------------------SUIVANT --------------------
+
+
 -- trigger to set the reussi column based on the score
 CREATE TRIGGER tentativeScore
 BEFORE INSERT ON Tentative
@@ -87,6 +128,16 @@ BEGIN
         SET NEW.reussi = FALSE;
     END IF;
 END //
+
+-- Requête de test qui fonctionne
+INSERT INTO Tentative (Utilisateur_idUtilisateur, Examen_idExamen, score) VALUES (1, 1, 50);
+
+-- Requête de test qui ne fonctionne pas
+INSERT INTO Tentative (Utilisateur_idUtilisateur, Examen_idExamen, score) VALUES (1, 1, 40);
+
+
+--------------------SUIVANT --------------------
+
 
 -- trigger to make sure the user is enrolled in a course before enrolling in a session
 CREATE TRIGGER sessionInscription
@@ -140,6 +191,9 @@ END //
 
 -- back to classic delimiter
 DELIMITER ;
+
+
+--------------------ROUTINES --------------------
 
 
 
