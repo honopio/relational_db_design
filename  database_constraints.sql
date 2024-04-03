@@ -163,6 +163,16 @@ BEGIN
     END IF;
 END //
 
+-- Requête de test qui fonctionne
+INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (1, 19);
+
+-- Requête de test qui ne fonctionne pas
+INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (1, 29);
+
+
+--------------------SUIVANT --------------------
+
+
 -- trigger to make sure the user is enrolled in a course before taking an exam
 CREATE TRIGGER examInscription
 BEFORE INSERT ON Tentative
