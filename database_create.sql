@@ -16,6 +16,13 @@ CREATE TABLE Cours (
     CONSTRAINT date_check CHECK (dateDebut <= dateFin) -- dateDebut doit preceder dateFin
 ) COMMENT 'Les cours de la plateforme MOOC';
 
+-- Table: Cours_Utilisateur
+CREATE TABLE Cours_Utilisateur (
+    Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
+    Cours_numCours integer  NOT NULL COMMENT 'le numéro identifiant de chaque cours',
+    CONSTRAINT Cours_Utilisateur_pk PRIMARY KEY (Utilisateur_idUtilisateur,Cours_numCours)
+) COMMENT 'Les cours, avec les utilisateurs en charge du cours (administrateurs, créateurs, formateurs)';
+
 -- Table: Examen
 CREATE TABLE Examen (
     idExamen integer  NOT NULL AUTO_INCREMENT COMMENT 'numero identifiant de l''''examen',
@@ -128,6 +135,14 @@ CREATE TABLE Utilisateur_Session (
 ALTER TABLE InscriptionCours ADD CONSTRAINT Cours_InscriptionCours FOREIGN KEY Cours_InscriptionCours (Cours_numCours)
     REFERENCES Cours (numCours)
     ON UPDATE CASCADE;
+
+-- Reference: Cours_Utilisateur_Cours (table: Cours_Utilisateur)
+ALTER TABLE Cours_Utilisateur ADD CONSTRAINT Cours_Utilisateur_Cours FOREIGN KEY Cours_Utilisateur_Cours (Cours_numCours)
+    REFERENCES Cours (numCours);
+
+-- Reference: Cours_Utilisateur_Utilisateur (table: Cours_Utilisateur)
+ALTER TABLE Cours_Utilisateur ADD CONSTRAINT Cours_Utilisateur_Utilisateur FOREIGN KEY Cours_Utilisateur_Utilisateur (Utilisateur_idUtilisateur)
+    REFERENCES Utilisateur (idUtilisateur);
 
 -- Reference: Examen_Partie (table: Examen)
 ALTER TABLE Examen ADD CONSTRAINT Examen_Partie FOREIGN KEY Examen_Partie (Partie_numPartie)

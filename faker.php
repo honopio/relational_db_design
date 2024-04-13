@@ -462,4 +462,46 @@ foreach ($inscriptionCoursRows2 as $inscriptionCoursRow2) {
 }
 echo "UTILISATEUR_SESSION inserted successfully"."\n";
 
+/* ---------- TABLE COURS_UTILISATEUR ----------------- */
+/* -- Table: Cours_Utilisateur
+CREATE TABLE Cours_Utilisateur (
+    Utilisateur_idUtilisateur integer  NOT NULL COMMENT 'identifiant unique des utilisateurs',
+    Cours_numCours integer  NOT NULL COMMENT 'le numéro identifiant de chaque cours',
+    CONSTRAINT Cours_Utilisateur_pk PRIMARY KEY (Utilisateur_idUtilisateur,Cours_numCours)
+) COMMENT 'Les cours, avec les utilisateurs en charge du cours (administrateurs, créateurs, formateurs)';
+*/
+//retrieve every user that is not (only) a student
+$utilisateurPasEtudiant = $conn->prepare("SELECT Utilisateur_idUtilisateur FROM Utilisateur_Role WHERE Role_idRole != 1");
+$utilisateurPasEtudiant->execute();
+$utilisateurPasEtudiantRows = $utilisateurPasEtudiant->fetchAll(PDO::FETCH_ASSOC);
+
+//retrieve every cours
+$allcourses = $conn->prepare("SELECT numCours FROM Cours");
+$allcourses->execute();
+$allcoursesRows = $allcourses->fetchAll(PDO::FETCH_ASSOC);
+
+//for every course, assign one to three random users that are not only students
+foreach ($allcoursesRows as $allcoursesRow) {
+    $Cours_numCours = $allcoursesRow['numCours'];
+    $nbUsers = $faker->numberBetween(1, 3); //on assigne un ou deux users au cours
+    
+    //assigner pour chaque cours entre 1 et 3 users. do/while pour eviter les doublons
+    $usedUsers = array();
+    for ($j = 1; $j <= $nbUsers; $j++) {
+        do {
+            $Utilisateur_idUtilisateur = $faker->randomElement($utilisateurPasEtudiantRows)['Utilisateur_idUtilisateur']; //random idUtilisateur
+        } while (in_array($Utilisateur_idUtilisateur, $usedUsers)); // Check if the user has been used for this course
+        // Add the user to the used users array
+        $usedUsers[] = $Utilisateur_idUtilisateur;
+
+
+        // Insert into Cours_Utilisateur table
+        $stmt = $conn->prepare("INSERT INTO Cours_Utilisateur (Utilisateur_idUtilisateur, Cours_numCours) VALUES (:Utilisateur_idUtilisateur, :Cours_numCours)");
+        $stmt->bindParam(':Utilisateur_idUtilisateur', $Utilisateur_idUtilisateur, PDO::PARAM_INT);
+        $stmt->bindParam(':Cours_numCours', $Cours_numCours, PDO::PARAM_INT);
+        $stmt->execute();
+    }
+}
+echo "COURS_UTILISATEUR inserted successfully"."\n";
+
 echo "\nFake data inserted successfully !"."\n";
