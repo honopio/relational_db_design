@@ -21,8 +21,6 @@ INSERT INTO Cours (numCours, intitule, dateDebut, dateFin, description, cout, pr
 
 
 --------------------SUIVANT --------------------
--- FIND THE FUCKING ISSUE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 -- trigger to check if the inscription date is within the course's beginning and end dates
 CREATE TRIGGER dateInscrCours
@@ -108,31 +106,37 @@ INSERT INTO Session (numSession, Cours_numCours, dateHeureDebut, dateHeureFin, c
 --------------------SUIVANT --------------------
 
 
--- trigger to set the reussi column based on the score
+-- trigger to check if "reussi" is set according to the score
 CREATE TRIGGER tentativeScore
 BEFORE INSERT ON Tentative
 FOR EACH ROW
 BEGIN
-    DECLARE scoreMin INT;
+    -- check if the score is set
+    IF NEW.score IS NOT NULL THEN
 
-    -- on recupere le score min de l'examen
-    SELECT scoreMin INTO scoreMin
-    FROM Examen
-    WHERE idExamen = NEW.Examen_idExamen;
+        -- if the "reussi" attribute is not set correctly (if score < examen.scoreMin AND reussi is set to true, or the other way around), error
+        IF (NEW.score < (
+            SELECT scoreMin
+            FROM Examen
+            WHERE idExamen = NEW.Examen_idExamen
+        ) AND NEW.reussi = true) OR (NEW.score >= (
+            SELECT scoreMin
+            FROM Examen
+            WHERE idExamen = NEW.Examen_idExamen
+        ) AND NEW.reussi = false) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Reussi must be set according to the score';
+        END IF;
 
-    -- set la colonne reussi selon le score
-    IF NEW.score >= scoreMin THEN
-        SET NEW.reussi = TRUE;
-    ELSE
-        SET NEW.reussi = FALSE;
+
     END IF;
 END //
 
--- Requête de test qui fonctionne
-INSERT INTO Tentative (Utilisateur_idUtilisateur, Examen_idExamen, score) VALUES (1, 1, 50);
+-- Requête de test qui fonctionne. reussi is true
+INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_idExamen) VALUES (1, '2020-01-01', 60, true, 1);
 
--- Requête de test qui ne fonctionne pas
-INSERT INTO Tentative (Utilisateur_idUtilisateur, Examen_idExamen, score) VALUES (1, 1, 40);
+-- Requête de test qui ne fonctionne pas.
+INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_idExamen) VALUES (1, '2020-01-01', 40, true, 1);
 
 
 --------------------SUIVANT --------------------
@@ -162,11 +166,11 @@ BEGIN
     END IF;
 END //
 
--- Requête de test qui fonctionne
-INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (1, 19);
+-- Requête de test qui fonctionne. le user 1 s'inscrit a une session du cours 1 (numSession 3), auquel il est insvrit
+INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (1, 3); 
 
--- Requête de test qui ne fonctionne pas
-INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (1, 29);
+-- Requête de test qui ne fonctionne pas. le user 1 s'inscrit a une session du cours 10 (numSession 9), auquel il n'est pas inscrit
+INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (1, 9);
 
 
 --------------------SUIVANT --------------------
@@ -196,13 +200,19 @@ BEGIN
         SET MESSAGE_TEXT = 'User must be enrolled in the course before taking an exam';
     END IF;
 END //
+-- Requête de test qui fonctionne. user 2 fait une tentative pour l'exam 5 (numPartie 15), du numCours 2 auquel il est inscrit
+INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_idExamen) VALUES (2, '2020-01-01', 60, true, 5);
 
--- Requête de test qui fonctionne
-
--- Requête de test qui ne fonctionne pas
+-- Requête de test qui ne fonctionne pas. user 2 fait une tentative pour l'exam 22 (numPartie 53), du numCours 9 auquel il n'est pas inscrit
+INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_idExamen) VALUES (2, '2020-01-01', 100, true, 22);
 
 
 --------------------SUIVANT --------------------
+
+------------------------ 
+-- NE MARCHE PAS. J'ai vérifié avec des requêtes qu'on récupérait bien la capacité max d'une session et le nombre d'inscrits, mais on peut insérer ce qu'on veut
+-----------------------------------------------------------------------------------------
+
 
 -- trigger to check if the session is full before enrolling
 CREATE TRIGGER sessionCapacite
@@ -229,9 +239,11 @@ BEGIN
     END IF;
 END //
 
--- Requête de test qui fonctionne
+-- Requête de test qui fonctionne. user 2 peut s'inscrire à la session 3
+INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (2, 3);
 
--- Requête de test qui ne fonctionne pas
+-- Requête de test qui ne fonctionne pas. user 7 est inscrit au cours lié à la session 1, mais la session est déjà remplie
+INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (7, 1);
 
 
 --------------------SUIVANT --------------------
@@ -252,6 +264,12 @@ BEGIN
         SET MESSAGE_TEXT = "L'utilisateur ne doit pas être seulement un etudiant";
     END IF;
 END //
+
+-- Requête de test qui fonctionne. user 5 est un createur, il peut donc être assigné à un cours
+INSERT INTO Cours_Utilisateur (Utilisateur_idUtilisateur, Cours_numCours) VALUES (5, 1);
+
+-- Requête de test qui ne fonctionne pas. user 2 est seulement un étudiant, il ne peut pas être assigné à un cours
+INSERT INTO Cours_Utilisateur (Utilisateur_idUtilisateur, Cours_numCours) VALUES (2, 1);
 
 -- back to classic delimiter
 DELIMITER ;
