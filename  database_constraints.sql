@@ -212,15 +212,15 @@ INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_id
 
 
 -- trigger to check if the session is full before enrolling
-CREATE TRIGGER sessionCapacite
+CREATE TRIGGER sessionCapacite2
 BEFORE INSERT ON Utilisateur_Session
 FOR EACH ROW
 BEGIN
-    DECLARE capaciteMax INT;
+    DECLARE capacite INT;
     DECLARE nbInscrits INT;
 
     -- get the session's maximum capacity
-    SELECT capaciteMax INTO capaciteMax
+    SELECT capaciteMax INTO capacite
     FROM Session
     WHERE numSession = NEW.Session_numSession;
 
@@ -230,11 +230,12 @@ BEGIN
     WHERE Session_numSession = NEW.Session_numSession;
 
     -- check if the session is full
-    IF nbInscrits >= capaciteMax THEN
+    IF nbInscrits >= capacite THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Session is full';
     END IF;
 END //
+
 
 -- Requête de test qui fonctionne. user 2 peut s'inscrire à la session 3
 INSERT INTO Utilisateur_Session (Utilisateur_idUtilisateur, Session_numSession) VALUES (2, 3);
