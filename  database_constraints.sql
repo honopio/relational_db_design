@@ -310,7 +310,103 @@ DELIMITER ;
 
 --------------------ROUTINES --------------------
 
+DELIMITER //
+
+-- Procédure “corrections” qui marque toutes les tentatives comme réussies pour un cours donné, 
+-- si le score obtenu pour la tentative est supérieure au score minimum requis pour un examen
+CREATE PROCEDURE corrections(IN courseID INT)
+BEGIN
+    UPDATE Tentative T
+    JOIN Examen E ON T.Examen_idExamen = E.idExamen
+    JOIN Partie P ON E.Partie_numPartie = P.numPartie
+    SET T.reussi = TRUE
+    WHERE P.Cours_numCours = courseID AND T.score >= E.scoreMin;
+END //
+
+-- Procédure qui permet la création d'un cours en fournissant un identifiant utilisateur et les données du cours à insérer à la procédure (en utilisant le sql ci joint)
+CREATE PROCEDURE creerCours(
+    IN idUtilisateur INT, 
+    IN intitule VARCHAR(255), 
+    IN dateDebut DATE, 
+    IN dateFin DATE, 
+    IN description TEXT, 
+    IN cout DECIMAL(10,2), 
+    IN preRequis TEXT)
+BEGIN
+    -- vérifie que l'utilisateur a le bon role pour créer un cours
+    IF NOT EXISTS (
+        SELECT *
+        FROM Utilisateur_Role
+        WHERE Utilisateur_idUtilisateur = idUtilisateur
+        AND Role_idRole IN (2, 3, 4)
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'L utilisateur doit avoir le bon role pour créer un cours';
+    ELSE
+        INSERT INTO Cours (intitule, dateDebut, dateFin, description, cout, preRequis)
+        VALUES (intitule, dateDebut, dateFin, description, cout, preRequis);
+    END IF;
+END //
+
+/* test*/
+CALL creerCours(1, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
+/*test qui ne fonctionne pas, avec le userid 2*/
+CALL creerCours(2, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
+
+CREATE PROCEDURE EditerCours(
+    IN idUtilisateur INT, 
+    IN numCours INT, 
+    IN intitule VARCHAR(255), 
+    IN dateDebut DATE, 
+    IN dateFin DATE, 
+    IN description TEXT, 
+    IN cout DECIMAL(10,2), 
+    IN preRequis TEXT)
+BEGIN
+    -- vérifie que l'utilisateur a le bon role pour editer un cours
+    IF NOT EXISTS (
+        SELECT *
+        FROM Utilisateur_Role
+        WHERE Utilisateur_idUtilisateur = idUtilisateur
+        AND Role_idRole IN (2, 3, 4)
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'L utilisateur doit avoir le bon role pour editer un cours';
+    ELSE
+        UPDATE Cours
+        SET intitule = intitule, dateDebut = dateDebut, dateFin = dateFin, description = description, cout = cout, preRequis = preRequis
+        WHERE numCours = p_numCours;
+    END IF;
+END //
+
+/* test*/
+CALL editCours(1, 10, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
+/*test qui ne fonctionne pas, avec le userid 2*/
+CALL editCours(2, 10, 'Cours Y', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
 
 
+CREATE PROCEDURE SupprimerCours(
+    IN p_numCours INT
+)
+BEGIN
+    -- vérifie que l'utilisateur a le bon role pour supprimer un cours
+    IF NOT EXISTS (
+        SELECT *
+        FROM Utilisateur_Role
+        WHERE Utilisateur_idUtilisateur = idUtilisateur
+        AND Role_idRole IN (2, 3, 4)
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'L utilisateur doit avoir le bon role pour supprimer un cours';
+    ELSE
+        DELETE FROM Cours
+        WHERE numCours = p_numCours;
+    END IF;
+END //
+
+/* test*/
+CALL SupprimerCours(10);
+
+DELIMITER ;
 -- End of file.
 
