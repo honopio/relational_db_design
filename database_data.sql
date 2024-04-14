@@ -1019,7 +1019,6 @@ INSERT INTO moocDB.Utilisateur_Role (Utilisateur_idUtilisateur,Role_idRole) VALU
 	 (8,2),
 	 (8,3),
 	 (9,1),
-	 (9,4),
 	 (10,1),
 	 (11,2),
 	 (11,3),
@@ -1032,7 +1031,6 @@ INSERT INTO moocDB.Utilisateur_Role (Utilisateur_idUtilisateur,Role_idRole) VALU
 	 (13,4),
 	 (13,5),
 	 (14,1),
-	 (14,3),
 	 (15,1),
 	 (15,2);
 INSERT INTO moocDB.Utilisateur_Role (Utilisateur_idUtilisateur,Role_idRole) VALUES
@@ -1044,7 +1042,6 @@ INSERT INTO moocDB.Utilisateur_Role (Utilisateur_idUtilisateur,Role_idRole) VALU
 	 (18,3),
 	 (18,5),
 	 (19,1),
-	 (19,5),
 	 (20,1);
 INSERT INTO moocDB.Utilisateur_Role (Utilisateur_idUtilisateur,Role_idRole) VALUES
 	 (20,2),
@@ -1066,3 +1063,23 @@ INSERT INTO moocDB.Utilisateur_Session (Utilisateur_idUtilisateur,Session_numSes
 	 (17,1),
 	 (17,6),
 	 (17,9);
+INSERt INTO moocDB.Cours_Utilisateur (Cours_numCours, Utilisateur_idUtilisateur) VALUES
+	-- insert every user except 2 9 10 14 19. only one or two rows per course.
+	 (1,17),
+	 (1,3),
+	 (2,15),
+	 (3,1),
+	 (4,3),
+	 (4,4),
+	 (5,5),
+	 (6,7),
+	 (6,8),
+	 (7,11);
+INSERT INTO moocDB.Cours_Utilisateur (Cours_numCours, Utilisateur_idUtilisateur) VALUES
+	 (8,12),
+	 (8,13),
+	 (9,15),
+	 (9,16),
+	 (10,17),
+	 (10,18);
+
