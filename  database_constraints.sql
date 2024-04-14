@@ -353,38 +353,40 @@ CALL creerCours(1, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'P
 /*test qui ne fonctionne pas, avec le userid 2*/
 CALL creerCours(2, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
 
+DELIMITER //
 CREATE PROCEDURE EditerCours(
-    IN idUtilisateur INT, 
-    IN numCours INT, 
-    IN intitule VARCHAR(255), 
-    IN dateDebut DATE, 
-    IN dateFin DATE, 
-    IN description TEXT, 
-    IN cout DECIMAL(10,2), 
-    IN preRequis TEXT)
+    IN p_idUtilisateur INT, 
+    IN p_numCours INT, 
+    IN p_intitule VARCHAR(255), 
+    IN p_dateDebut DATE, 
+    IN p_dateFin DATE, 
+    IN p_description TEXT, 
+    IN p_cout DECIMAL(10,2), 
+    IN p_preRequis TEXT)
 BEGIN
     -- vérifie que l'utilisateur a le bon role pour editer un cours
     IF NOT EXISTS (
         SELECT *
         FROM Utilisateur_Role
-        WHERE Utilisateur_idUtilisateur = idUtilisateur
+        WHERE Utilisateur_idUtilisateur = p_idUtilisateur
         AND Role_idRole IN (2, 3, 4)
     ) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'L utilisateur doit avoir le bon role pour editer un cours';
     ELSE
         UPDATE Cours
-        SET intitule = intitule, dateDebut = dateDebut, dateFin = dateFin, description = description, cout = cout, preRequis = preRequis
+        SET intitule = p_intitule, dateDebut = p_dateDebut, dateFin = p_dateFin, description = p_description, cout = p_cout, preRequis = p_preRequis
         WHERE numCours = p_numCours;
     END IF;
-END //
+END//
+DELIMITER ;
 
 /* test*/
-CALL editCours(1, 10, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
+CALL EditerCours(1, 10, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
 /*test qui ne fonctionne pas, avec le userid 2*/
-CALL editCours(2, 10, 'Cours Y', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
+CALL EditerCours(2, 10, 'Cours Y', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
 
-
+DELIMITER //
 CREATE PROCEDURE SupprimerCours(
     IN p_numCours INT
 )
