@@ -483,7 +483,7 @@ $allcoursesRows = $allcourses->fetchAll(PDO::FETCH_ASSOC);
 //for every course, assign one to three random users that are not only students
 foreach ($allcoursesRows as $allcoursesRow) {
     $Cours_numCours = $allcoursesRow['numCours'];
-    $nbUsers = $faker->numberBetween(1, 3); //on assigne un ou deux users au cours
+    $nbUsers = $faker->numberBetween(1, 2); //on assigne un ou deux users au cours
     
     //assigner pour chaque cours entre 1 et 3 users. do/while pour eviter les doublons
     $usedUsers = array();

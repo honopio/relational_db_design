@@ -40,8 +40,7 @@ BEGIN
     -- check if the inscription date is within the dates (if the date range is set)
     IF debut IS NOT NULL AND fin IS NOT NULL THEN
         IF NEW.dateInscription < debut OR NEW.dateInscription > fin THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Inscription date must be between course start and end dates';
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Inscription date must be between course start and end dates';
         END IF;
     END IF;
 END //
@@ -198,6 +197,61 @@ BEGIN
     END IF;
 END //
 
+-- Requête de test qui fonctionne
+
+-- Requête de test qui ne fonctionne pas
+
+
+--------------------SUIVANT --------------------
+
+-- trigger to check if the session is full before enrolling
+CREATE TRIGGER sessionCapacite
+BEFORE INSERT ON Utilisateur_Session
+FOR EACH ROW
+BEGIN
+    DECLARE capaciteMax INT;
+    DECLARE nbInscrits INT;
+
+    -- get the session's maximum capacity
+    SELECT capaciteMax INTO capaciteMax
+    FROM Session
+    WHERE numSession = NEW.Session_numSession;
+
+    -- get the number of users enrolled in the session
+    SELECT COUNT(*) INTO nbInscrits
+    FROM Utilisateur_Session
+    WHERE Session_numSession = NEW.Session_numSession;
+
+    -- check if the session is full
+    IF nbInscrits >= capaciteMax THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Session is full';
+    END IF;
+END //
+
+-- Requête de test qui fonctionne
+
+-- Requête de test qui ne fonctionne pas
+
+
+--------------------SUIVANT --------------------
+
+-- trigger to check if the user is not (only) a student, before creating or being assigned a course in table Cours_Utilisateur
+CREATE TRIGGER userRole
+BEFORE INSERT ON Cours_Utilisateur
+FOR EACH ROW
+BEGIN
+    -- get the user roles in table Utilisateur_Role. If he has only role 1 (student), then he can't create or be assigned a course
+    IF NOT EXISTS (
+        SELECT *
+        FROM Utilisateur_Role
+        WHERE Utilisateur_idUtilisateur = NEW.Utilisateur_idUtilisateur
+        AND Role_idRole != 1
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = "L'utilisateur ne doit pas être seulement un etudiant";
+    END IF;
+END //
 
 -- back to classic delimiter
 DELIMITER ;
