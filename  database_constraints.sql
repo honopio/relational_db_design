@@ -205,11 +205,6 @@ INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_id
 
 --------------------SUIVANT --------------------
 
------------------------- 
--- NE MARCHE PAS. J'ai vérifié avec des requêtes qu'on récupérait bien la capacité max d'une session et le nombre d'inscrits, 
--- mais on peut insérer ce qu'on veut
------------------------------------------------------------------------------------------
-
 
 -- trigger to check if the session is full before enrolling
 CREATE TRIGGER sessionCapacite2
