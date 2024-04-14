@@ -114,20 +114,16 @@ BEGIN
     -- check if the score is set
     IF NEW.score IS NOT NULL THEN
 
-        -- if the "reussi" attribute is not set correctly (if score < examen.scoreMin AND reussi is set to true, or the other way around), error
-        IF (NEW.score < (
+        -- set the reussi attribute according to the score. if Tentative.score >= Examen.scoreMin, reussi = true
+        IF NEW.score >= (
             SELECT scoreMin
             FROM Examen
             WHERE idExamen = NEW.Examen_idExamen
-        ) AND NEW.reussi = true) OR (NEW.score >= (
-            SELECT scoreMin
-            FROM Examen
-            WHERE idExamen = NEW.Examen_idExamen
-        ) AND NEW.reussi = false) THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Reussi must be set according to the score';
+        ) THEN
+            SET NEW.reussi = true;
+        ELSE
+            SET NEW.reussi = false;
         END IF;
-
 
     END IF;
 END //
@@ -135,7 +131,7 @@ END //
 -- Requête de test qui fonctionne. reussi is true
 INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_idExamen) VALUES (1, '2020-01-01', 60, true, 1);
 
--- Requête de test qui ne fonctionne pas.
+-- Requête de test qui sera corrigee automatiquement. on essaye d'assigner true a une tentative non reussie.
 INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_idExamen) VALUES (1, '2020-01-01', 40, true, 1);
 
 
@@ -210,7 +206,8 @@ INSERT INTO Tentative (Utilisateur_idUtilisateur, date, score, reussi, Examen_id
 --------------------SUIVANT --------------------
 
 ------------------------ 
--- NE MARCHE PAS. J'ai vérifié avec des requêtes qu'on récupérait bien la capacité max d'une session et le nombre d'inscrits, mais on peut insérer ce qu'on veut
+-- NE MARCHE PAS. J'ai vérifié avec des requêtes qu'on récupérait bien la capacité max d'une session et le nombre d'inscrits, 
+-- mais on peut insérer ce qu'on veut
 -----------------------------------------------------------------------------------------
 
 
@@ -273,6 +270,8 @@ INSERT INTO Cours_Utilisateur (Utilisateur_idUtilisateur, Cours_numCours) VALUES
 
 -- back to classic delimiter
 DELIMITER ;
+
+
 
 
 --------------------ROUTINES --------------------
