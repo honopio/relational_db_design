@@ -268,6 +268,39 @@ INSERT INTO Cours_Utilisateur (Utilisateur_idUtilisateur, Cours_numCours) VALUES
 -- Requête de test qui ne fonctionne pas. user 2 est seulement un étudiant, il ne peut pas être assigné à un cours
 INSERT INTO Cours_Utilisateur (Utilisateur_idUtilisateur, Cours_numCours) VALUES (2, 1);
 
+
+--------------------SUIVANT --------------------
+
+-- Un étudiant ne peut pas s’inscrire à un cours payant s’il n’a pas réglé les frais d’inscription
+CREATE TRIGGER reglementInscription
+BEFORE INSERT ON InscriptionCours
+FOR EACH ROW
+BEGIN
+    -- check if the course is not free
+    IF (
+        SELECT cout
+        FROM Cours
+        WHERE numCours = NEW.Cours_numCours
+    ) > 0 THEN
+        -- check if the user has paid the course
+        IF NOT EXISTS (
+            SELECT *
+            FROM Reglement
+            WHERE Utilisateur_idUtilisateur = NEW.Utilisateur_idUtilisateur
+            AND Cours_numCours = NEW.Cours_numCours
+        ) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'User must pay the course before enrolling';
+        END IF;
+    END IF;
+END //
+
+-- Requête de test qui fonctionne. user 1 a payé le cours 5, il peut donc s'inscrire
+INSERT INTO InscriptionCours (Utilisateur_idUtilisateur, Cours_numCours, dateInscription) VALUES (1, 5, '2020-01-01');
+
+-- Requête de test qui ne fonctionne pas. user 1 n'a pas payé le cours 4, il ne peut donc pas s'inscrire
+INSERT INTO InscriptionCours (Utilisateur_idUtilisateur, Cours_numCours, dateInscription) VALUES (1, 4, '2020-01-01');
+
 -- back to classic delimiter
 DELIMITER ;
 

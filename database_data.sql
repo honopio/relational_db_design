@@ -599,7 +599,8 @@ INSERT INTO moocDB.Reglement (Utilisateur_idUtilisateur,Cours_numCours) VALUES
 	 (2,8),
 	 (10,8),
 	 (15,8),
-	 (17,8);
+	 (17,8),
+	 (1,5);
 INSERT INTO moocDB.`Role` (idRole,nom,description) VALUES
 	 (1,'etudiant','Les etudiants peuvent s''inscrire a des cours, passer des examens, evaluer les cours qu''ils ont suivi'),
 	 (2,'createur','Les createurs de cours concoivent de nouveaux cours pour la plateforme.'),
