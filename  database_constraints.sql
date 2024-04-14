@@ -310,10 +310,10 @@ DELIMITER ;
 
 --------------------ROUTINES --------------------
 
-DELIMITER //
 
 -- Procédure “corrections” qui marque toutes les tentatives comme réussies pour un cours donné, 
 -- si le score obtenu pour la tentative est supérieure au score minimum requis pour un examen
+DELIMITER //
 CREATE PROCEDURE corrections(IN courseID INT)
 BEGIN
     UPDATE Tentative T
@@ -324,6 +324,7 @@ BEGIN
 END //
 
 -- Procédure qui permet la création d'un cours en fournissant un identifiant utilisateur et les données du cours à insérer à la procédure (en utilisant le sql ci joint)
+DELIMITER //
 CREATE PROCEDURE creerCours(
     IN idUtilisateur INT, 
     IN intitule VARCHAR(255), 
@@ -348,11 +349,13 @@ BEGIN
     END IF;
 END //
 
-/* test*/
+DELIMITER ;
+/* test qui fonctionne */
 CALL creerCours(1, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
-/*test qui ne fonctionne pas, avec le userid 2*/
+/*test qui ne fonctionne pas, avec le idUtilisateur 2, qui est seulement un étudiant */
 CALL creerCours(2, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
 
+-- Procédure pour l'édition d'un cours. Bloquée si l'utilisateur n'est pas créateur, formateur ou administrateur.
 DELIMITER //
 CREATE PROCEDURE EditerCours(
     IN p_idUtilisateur INT, 
@@ -378,14 +381,14 @@ BEGIN
         SET intitule = p_intitule, dateDebut = p_dateDebut, dateFin = p_dateFin, description = p_description, cout = p_cout, preRequis = p_preRequis
         WHERE numCours = p_numCours;
     END IF;
-END//
+END //
 DELIMITER ;
-
-/* test*/
+/* test qui fonctionne */
 CALL EditerCours(1, 10, 'Cours Z', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
-/*test qui ne fonctionne pas, avec le userid 2*/
+/*test qui ne fonctionne pas, avec l'idUtilisateur 2, qui est uniquement étudiant */
 CALL EditerCours(2, 10, 'Cours Y', '2020-01-01', '2020-01-02', 'Description', 100, 'Pre-requis');
 
+-- Procédure pour la suppression d'un cours. bloquée si l'utilisateur n'est pas formateur, créateur ou administrateur
 DELIMITER //
 CREATE PROCEDURE SupprimerCours(
     IN p_numCours INT
@@ -405,10 +408,10 @@ BEGIN
         WHERE numCours = p_numCours;
     END IF;
 END //
-
+DELIMITER ;
 /* test*/
 CALL SupprimerCours(10);
 
-DELIMITER ;
+
 -- End of file.
 
